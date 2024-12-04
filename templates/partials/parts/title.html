@@ -1,0 +1,8 @@
+{% set ns = namespace(title="Books API") %}
+
+{% if meta and meta.name %}
+    {% set ns.title = meta.name + "Books API" %}
+{% elif content and content.heading %}
+    {% set ns.title = content.heading + " . Books API" %}
+{% endif %}
+<title>{{ ns.title }}</title>

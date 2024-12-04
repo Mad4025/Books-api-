@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Search Results</title>
+    </head>
+    <body>
+        <h1>Search Results</h1>
+        <ul>
+            {% for book in books %}
+                <li>
+                    <h2>{{ book.volumeInfo.title }}</h2>
+                    <p>{{ book.volumeInfo.authors | join(', ') }}</p>
+                    <p>{{ book.volumeInfo.description }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+        <a href="{{ url_for('search_books') }}">Back to Search</a>
+    </body>
+</html>

@@ -1,0 +1,10 @@
+{% extends 'layout.html' %}
+{% block headline %}
+    <h1 class="title">Welcome to book API</h1>
+{% endblock headline %}
+
+{% block content %}
+    <div class="btn btn-primary">
+        <a href="{{ url_for('search_books') }}" class="btn">Go To Search</a>
+    </div>
+{% endblock content %}

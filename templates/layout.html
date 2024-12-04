@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% block head %}
+            {% include "partials/head.html" | safe %}
+        {% endblock %}
+    </head>
+    <body>
+        <header>
+            {% block header %}
+                {% include "partials/header.html" %}
+            {% endblock %}
+        </header>
+        
+        <main role="main" class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    {% block headline %} {% endblock headline %}
+                    {% block content %} {% endblock content %}
+                </div>
+            </div>
+        </main>
+
+        {% block scripts %}
+            {% include "partials/parts/scripts.html" %}
+        {% endblock %}
+    </body>
+</html>
