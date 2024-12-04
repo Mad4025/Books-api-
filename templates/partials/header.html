@@ -14,11 +14,12 @@
                 {% endif %}
             </div>
         </div>
-        <div class="btn btn-primary" style="background:none; border:none;">
+        <div class="btn btn-primary">
             {% if current_user.is_authenticated %}
                 {% if profile_pic %}
                     <img src="{{ profile_pic }}" alt="Profile Picture" style="width:38px; height:38px; border-radius:50%;">
                 {% endif %}
+                <span style="color:black;">{{ name }}</span>
                 <a href="{{ url_for('logout') }}" class="btn">Log out</a>
             {% else %}
                 <a href="{{ url_for('login_google') }}" class="btn">Log in</a>

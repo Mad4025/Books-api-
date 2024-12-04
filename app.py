@@ -52,7 +52,8 @@ google = oauth.register("myApp",
 def index():
     user_admin = session.get('user_admin', False)
     profile_pic = session.get('profile_pic')
-    return render_template('index.html', user_admin=user_admin, profile_pic=profile_pic)
+    name = session.get('name')
+    return render_template('index.html', user_admin=user_admin, profile_pic=profile_pic, name=name)
 
 
 @app.route('/search_books', methods=['GET', 'POST'])
@@ -83,6 +84,7 @@ def google_callback():
     # Login logic
     user_info = google.get('https://www.googleapis.com/oauth2/v3/userinfo').json()
     session['profile_pic'] = user_info['picture']  # Save profile picture URL
+    session['name'] = user_info['name']
     user = User.query.filter_by(username=user_info['name']).first()
 
     # Add the emails that will have admin privileges.
