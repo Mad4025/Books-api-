@@ -14,12 +14,44 @@
                         <h2>{{ book.volumeInfo.title }}</h2>
                         <p>{{ book.volumeInfo.authors | join(', ') }}</p>
                         <p>{{ book.volumeInfo.description }}</p>
+                        <button class="remove-book" onclick="removeFromLibrary('{{ book.id }}')">Remove from library</button>
                     {% endif %}
                 </li>
             {% endfor %}
         </ul>
     {% else %}
         <h2>Welcome, Guest!</h2>
-        <p>Please <a href="{{ url_for('login_google') }}">login</a> to access your library.</p>
+        <p>Please <a href="{{ url_for('login_google') }}">log in</a> to access your library.</p>
     {% endif %}
+
+    <script>
+        function removeFromLibrary(bookId) {
+            fetch('/remove_from_library', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ book_id: bookId }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to remove book from library');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Book removed:', data);
+                if (data.requires_login) {
+                    window.location.href = "{{ url_for('login_google') }}";
+                } else {
+                    alert('Book removed successfully!');
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error removing book:', error);
+                alert('Failed to remove book from library');
+            });
+        }
+    </script>        
 {% endblock content %}

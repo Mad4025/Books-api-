@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, session, g, Flask
+from flask import render_template, redirect, url_for, flash, request, session, g, Flask, jsonify
 from flask_login import login_user, login_required, logout_user, current_user, LoginManager, UserMixin
 import requests
 from authlib.integrations.flask_client import OAuth
@@ -131,7 +131,10 @@ def admin():
 
 @app.route('/library')
 def library():
-    access_token = session['user']['access_token']
+    try:
+        access_token = session['user']['access_token']
+    except KeyError:
+        return redirect(url_for('login'))
     headers = {'Authorization': f'Bearer {access_token}'}
 
     # Fetch the user's library again to ensure updates
@@ -174,6 +177,28 @@ def add_to_library():
     except Exception as e:
         print(f"Error in add_to_library: {e}")
         return {"error": "Something went wrong"}, 500
+
+
+@app.route('/remove_from_library', methods=['POST'])
+def remove_from_library():
+    data = request.get_json()
+    book_id = data.get('book_id')
+    user_token = session.get('user', {}).get('access_token')
+
+    if not user_token:
+        return jsonify({'requires_login': True}), 401
+
+    try:
+        url = f'https://www.googleapis.com/books/v1/mylibrary/bookshelves/0/removeVolume?volumeId={book_id}'
+        headers = {'Authorization': f'Bearer {user_token}'}
+        response = requests.post(url, headers=headers)
+
+        if response.status_code == 204:
+            return jsonify({'message': 'Book removed successfully!'}), 204
+        else:
+            return jsonify({'error': 'Failed to remove book from Google'}), response.status_code
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':

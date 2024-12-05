@@ -2,5 +2,5 @@ flask
 flask_login
 requests
 authlib
-dotenv
+python-dotenv
 flask_sqlalchemy
