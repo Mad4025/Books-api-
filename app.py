@@ -40,7 +40,7 @@ google = oauth.register("myApp",
     client_id=os.getenv('CLIENT_ID'),
     client_secret=os.getenv('CLIENT_SECRET'),  # This is crucial for OIDC
     # Make sure you have enabled these scopes in OAuth consent screen.
-    client_kwargs={'scope': 'openid profile email'},  # Use OIDC scope
+    client_kwargs={'scope': 'openid profile email https://www.googleapis.com/auth/books'},  # Use OIDC scope
     # Connect to server.
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',  # Important for OIDC
 )
@@ -103,8 +103,15 @@ def google_callback():
     login_user(user)
     # Set admin permissions to True or False based on the previous logic
     session['user_admin'] = is_admin
+    
+    access_token = token['access_token']
+    headers = {'Authorization': f'Bearer {access_token}'}
+    bookshelves_url = 'https://www.googleapis.com/books/v1/mylibrary/bookshelves'
+    # Retrieve user's library using Google Books API
+    bookshelves_response = requests.get(bookshelves_url, headers=headers).json()
+    session['bookshelves'] = bookshelves_response.get('items', [])
 
-    return redirect(url_for('index'))
+    return redirect(url_for('library'))
 
 # To log out the user.
 @app.route('/logout')
@@ -120,6 +127,53 @@ def logout():
 def admin():
     # Admin dashboard logic here
     return render_template('pages/admin.html')
+
+
+@app.route('/library')
+def library():
+    access_token = session['user']['access_token']
+    headers = {'Authorization': f'Bearer {access_token}'}
+
+    # Fetch the user's library again to ensure updates
+    bookshelves_url = 'https://www.googleapis.com/books/v1/mylibrary/bookshelves'
+    bookshelves_response = requests.get(bookshelves_url, headers=headers).json()
+    bookshelves = bookshelves_response.get('items', [])
+
+    # For each shelf, fetch its contents
+    library = []
+    for shelf in bookshelves:
+        shelf_id = shelf['id']
+        volumes_url = f'https://www.googleapis.com/books/v1/mylibrary/bookshelves/{shelf_id}/volumes'
+        volumes_response = requests.get(volumes_url, headers=headers).json()
+        shelf_contents = volumes_response.get('items', [])
+        library.extend(shelf_contents)
+
+    return render_template('pages/library.html', books=library)
+
+
+@app.route('/add_to_library', methods=['POST'])
+def add_to_library():
+    try:
+        data = request.json  # Parse the JSON request body
+        if not data:
+            print("No data received in request.")
+            return {"error": "No data provided"}, 400
+
+        book_id = data.get('book_id')
+        if not book_id:
+            print("No book_id provided.")
+            return {"error": "Book ID is required"}, 400
+
+        print(f"Valid request. Book ID: {book_id}")
+        # Here, you would add logic to save the book to the user's library.
+        # Example:
+        # save_book_to_library(current_user.id, book_id)
+
+        return {"message": "Book added successfully"}, 200
+
+    except Exception as e:
+        print(f"Error in add_to_library: {e}")
+        return {"error": "Something went wrong"}, 500
 
 
 if __name__ == '__main__':

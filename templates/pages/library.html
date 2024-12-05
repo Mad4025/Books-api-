@@ -1,0 +1,25 @@
+{% extends 'layout.html' %}
+{% block headline %}
+    <h1 class="title">Library</h1>
+{% endblock headline %}
+
+{% block content %}
+    {% if current_user.is_authenticated %}
+        <h2>Welcome!</h2>
+        <ul class="no_style_type">
+            {% for book in books %}
+                <li>
+                    {% if book.volumeInfo.imageLinks.thumbnail %}
+                        <img src="{{ book.volumeInfo.imageLinks.thumbnail }}">
+                        <h2>{{ book.volumeInfo.title }}</h2>
+                        <p>{{ book.volumeInfo.authors | join(', ') }}</p>
+                        <p>{{ book.volumeInfo.description }}</p>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <h2>Welcome, Guest!</h2>
+        <p>Please <a href="{{ url_for('login_google') }}">login</a> to access your library.</p>
+    {% endif %}
+{% endblock content %}

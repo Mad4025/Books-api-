@@ -1,10 +1,11 @@
 {% extends 'layout.html' %}
+
 {% block headline %}
-    <h1 class="title">Search Results</h1>
+    <h1 class="title">Search Results for '{{ request.form.get('query') }}'</h1>
 {% endblock headline %}
 
 {% block content %}
-    <br><ul style="list-style-type:none;">
+    <br><ul class="no_style_type">
         {% for book in books %}
             <li>
                 {% if book.volumeInfo.imageLinks and book.volumeInfo.imageLinks.thumbnail %}
@@ -13,9 +14,41 @@
                         <h2>{{ book.volumeInfo.title }}</h2>
                         <p>{{ book.volumeInfo.authors | join(', ') }}</p>
                         <p>{{ book.volumeInfo.description }}</p>
+                        <button onclick="addToLibrary('{{ book.id }}')" class="add-button">Add to Library</button>
                     </div>
                 {% endif %}
             </li>
         {% endfor %}
     </ul>
+
+    <script>
+        function addToLibrary(bookId) {
+            fetch('/add_to_library', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ book_id: bookId }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to add book to library');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Book added:', data);
+                if (data.requires_login) {
+                    window.location.href = "{{ url_for('login_google') }}";
+                } else {
+                    alert('Book added successfully!');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding book:', error);
+                alert('Failed to add book to library');
+            });
+        }        
+    </script>
+
 {% endblock content %}

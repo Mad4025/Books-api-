@@ -11,6 +11,10 @@ body {
     h1 {
         text-align: center;
     }
+
+    .no_style_type {
+        list-style-type:none;
+    }
     
     .bg-steel {
     background-color: #5f788a;
