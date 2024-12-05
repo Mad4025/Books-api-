@@ -1,0 +1,6 @@
+flask
+flask_login
+requests
+authlib
+dotenv
+flask_sqlalchemy
