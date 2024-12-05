@@ -22,6 +22,7 @@ login_manager.login_view = 'login'
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(150), nullable=False)
     role = db.Column(db.String(50), default='user')
 
 @login_manager.user_loader
@@ -48,16 +49,11 @@ google = oauth.register("myApp",
 
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
     user_admin = session.get('user_admin', False)
     profile_pic = session.get('profile_pic')
     name = session.get('name')
-    return render_template('index.html', user_admin=user_admin, profile_pic=profile_pic, name=name)
-
-
-@app.route('/search_books', methods=['GET', 'POST'])
-def search_books():
     if request.method == 'POST':
         query = request.form.get('query')
         if query:
@@ -66,7 +62,7 @@ def search_books():
             response = requests.get(url, params=params)
             books = response.json().get('items', [])
             return render_template('pages/search_results.html', books=books)
-    return render_template('pages/search_books.html')
+    return render_template('index.html', user_admin=user_admin, profile_pic=profile_pic, name=name)
 
 
 # Takes you to google's login thing.
@@ -93,7 +89,7 @@ def google_callback():
     # To update user roles
     if not user:
         # user = filler data
-        user = User(username=user_info['name'], role='user')
+        user = User(username=user_info['name'], password='oauth_dummy_password', role='user')
         db.session.add(user)
     else:
         if is_admin and user.role != 'admin':
@@ -118,6 +114,13 @@ def logout():
     session['user_admin'] = False
     flash('You have been logged out.')
     return redirect(url_for('index'))
+
+
+@app.route('/admin')
+def admin():
+    # Admin dashboard logic here
+    return render_template('pages/admin.html')
+
 
 if __name__ == '__main__':
     with app.app_context():

@@ -1,0 +1,10 @@
+{% extends 'layout.html' %}
+
+{% block headline %}
+        <h1 class="title">Welcome to the admin page!</h1>
+{% endblock headline %}
+
+{% block content %}
+        <p>I guess this is where you see statistics of how well your website is going...?</p>
+        <a href="{{ url_for('index') }}">Back to Home</a>
+{% endblock content %}

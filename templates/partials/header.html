@@ -7,17 +7,20 @@
         <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
                 <a class="nav-item nav-link" href="/">Home</a>
-                <a class="nav-item nav-link" href="/search_books">Search</a>
                 <a class="nav-item nav-link" href="/library">Library. Not added yet.</a>
                 {% if user_admin %}
                     <a class="nav-item nav-link" href="/admin">Admin</a>
                 {% endif %}
+                <form method="post">
+                    <input type="text" name="query" placeholder="Enter book title or author" style="border-radius:6px;">
+                    <button type="submit" style="border-radius:6px;">Search</button>
+                </form>
             </div>
         </div>
         <div class="btn btn-primary">
             {% if current_user.is_authenticated %}
                 {% if profile_pic %}
-                    <img src="{{ profile_pic }}" alt="Profile Picture" style="width:38px; height:38px; border-radius:50%;">
+                    <img src="{{ profile_pic }}" style="width:38px; height:38px; border-radius:50%;">
                 {% endif %}
                 <span style="color:black;">{{ name }}</span>
                 <a href="{{ url_for('logout') }}" class="btn">Log out</a>

@@ -4,14 +4,18 @@
 {% endblock headline %}
 
 {% block content %}
-    <ul>
+    <br><ul style="list-style-type:none;">
         {% for book in books %}
             <li>
-                <h2>{{ book.volumeInfo.title }}</h2>
-                <p>{{ book.volumeInfo.authors | join(', ') }}</p>
-                <p>{{ book.volumeInfo.description }}</p>
+                {% if book.volumeInfo.imageLinks and book.volumeInfo.imageLinks.thumbnail %}
+                    <div class="content-section">
+                        <img src="{{ book.volumeInfo.imageLinks.thumbnail }}">
+                        <h2>{{ book.volumeInfo.title }}</h2>
+                        <p>{{ book.volumeInfo.authors | join(', ') }}</p>
+                        <p>{{ book.volumeInfo.description }}</p>
+                    </div>
+                {% endif %}
             </li>
         {% endfor %}
     </ul>
-    <a href="{{ url_for('search_books') }}">Back to Search</a>
 {% endblock content %}
