@@ -6,6 +6,7 @@
 {% block content %}
     {% if current_user.is_authenticated %}
     <br><ul class="no_style_type">
+        <h2>Welcome, {{ name }}!</h2>
         {% for book in books %}
             <li>
                 {% if book.volumeInfo.imageLinks and book.volumeInfo.imageLinks.thumbnail %}

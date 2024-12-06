@@ -46,22 +46,19 @@ google = oauth.register("myApp",
 )
 
 
-
-
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
     user_admin = session.get('user_admin', False)
     profile_pic = session.get('profile_pic')
     name = session.get('name')
     if request.method == 'POST':
-        query = request.form.get('query')
-        if query:
-            url = 'https://www.googleapis.com/books/v1/volumes'
-            params = {'q': query}
-            response = requests.get(url, params=params)
-            books = response.json().get('items', [])
-            return render_template('pages/search_results.html', books=books)
+            query = request.form.get('query')
+            if query:
+                url = 'https://www.googleapis.com/books/v1/volumes'
+                params = {'q': query}
+                response = requests.get(url, params=params)
+                books = response.json().get('items', [])
+                return render_template('pages/search_results.html', books=books, user_admin=session['user_admin'], profile_pic=session['profile_pic'], name=session['name'])
     return render_template('index.html', user_admin=user_admin, profile_pic=profile_pic, name=name)
 
 
@@ -123,13 +120,13 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/admin')
+@app.route('/admin', methods=['POST'])
 def admin():
     # Admin dashboard logic here
-    return render_template('pages/admin.html')
+    return render_template('pages/admin.html', user_admin=session['user_admin'], profile_pic=session['profile_pic'], name=session['name'])
 
 
-@app.route('/library')
+@app.route('/library', methods=['POST'])
 def library():
     try:
         access_token = session['user']['access_token']
@@ -152,7 +149,7 @@ def library():
             shelf_contents = volumes_response.get('items', [])
             library.extend(shelf_contents)
 
-    return render_template('pages/library.html', books=library)
+    return render_template('pages/library.html', books=library, user_admin=session['user_admin'], profile_pic=session['profile_pic'], name=session['name'])
 
 
 @app.route('/add_to_library', methods=['POST'])
