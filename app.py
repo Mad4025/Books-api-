@@ -134,7 +134,7 @@ def library():
     try:
         access_token = session['user']['access_token']
     except KeyError:
-        return redirect(url_for('login'))
+        return redirect(url_for('login_google'))
     headers = {'Authorization': f'Bearer {access_token}'}
 
     # Fetch the user's library again to ensure updates
@@ -144,12 +144,13 @@ def library():
 
     # For each shelf, fetch its contents
     library = []
-    for shelf in bookshelves:
-        shelf_id = shelf['id']
-        volumes_url = f'https://www.googleapis.com/books/v1/mylibrary/bookshelves/{shelf_id}/volumes'
-        volumes_response = requests.get(volumes_url, headers=headers).json()
-        shelf_contents = volumes_response.get('items', [])
-        library.extend(shelf_contents)
+    if current_user.is_authenticated:
+        for shelf in bookshelves:
+            shelf_id = shelf['id']
+            volumes_url = f'https://www.googleapis.com/books/v1/mylibrary/bookshelves/{shelf_id}/volumes'
+            volumes_response = requests.get(volumes_url, headers=headers).json()
+            shelf_contents = volumes_response.get('items', [])
+            library.extend(shelf_contents)
 
     return render_template('pages/library.html', books=library)
 
@@ -161,19 +162,19 @@ def add_to_library():
         if not data:
             print("No data received in request.")
             return {"error": "No data provided"}, 400
-
         book_id = data.get('book_id')
         if not book_id:
             print("No book_id provided.")
             return {"error": "Book ID is required"}, 400
-
         print(f"Valid request. Book ID: {book_id}")
-        # Here, you would add logic to save the book to the user's library.
-        # Example:
-        # save_book_to_library(current_user.id, book_id)
+
+        url = f'https://www.googleapis.com/books/v1/mylibrary/bookshelves/0/addVolume?volumeId={book_id}'
+        headers = {'Authorization': f'Bearer {session["user"]["access_token"]}'}
+        response = requests.post(url, headers=headers)
+        if response.status_code != 204:
+            return {"error": "Failed to add book to library"}, response.status_code
 
         return {"message": "Book added successfully"}, 200
-
     except Exception as e:
         print(f"Error in add_to_library: {e}")
         return {"error": "Something went wrong"}, 500

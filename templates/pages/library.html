@@ -5,20 +5,21 @@
 
 {% block content %}
     {% if current_user.is_authenticated %}
-        <h2>Welcome!</h2>
-        <ul class="no_style_type">
-            {% for book in books %}
-                <li>
-                    {% if book.volumeInfo.imageLinks.thumbnail %}
+    <br><ul class="no_style_type">
+        {% for book in books %}
+            <li>
+                {% if book.volumeInfo.imageLinks and book.volumeInfo.imageLinks.thumbnail %}
+                    <div class="content-section">
                         <img src="{{ book.volumeInfo.imageLinks.thumbnail }}">
                         <h2>{{ book.volumeInfo.title }}</h2>
                         <p>{{ book.volumeInfo.authors | join(', ') }}</p>
                         <p>{{ book.volumeInfo.description }}</p>
                         <button class="remove-book" onclick="removeFromLibrary('{{ book.id }}')">Remove from library</button>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
+                    </div>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
     {% else %}
         <h2>Welcome, Guest!</h2>
         <p>Please <a href="{{ url_for('login_google') }}">log in</a> to access your library.</p>
