@@ -11,7 +11,7 @@
                 {% if user_admin %}
                     <a class="nav-item nav-link" href="/admin">Admin</a>
                 {% endif %}
-                <form method="post">
+                <form method="get" action="/search">
                     <input type="text" name="query" placeholder="Enter book title or author" style="border-radius:6px;">
                     <button type="submit" style="border-radius:6px;">Search</button>
                 </form>
