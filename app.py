@@ -121,27 +121,32 @@ def admin():
 @app.route('/library')
 def library():
     try:
-        access_token = session['user']['access_token']
-    except KeyError:
-        return redirect(url_for('login_google'))
-    headers = {'Authorization': f'Bearer {access_token}'}
+        try:
+            access_token = session['user']['access_token']
+        except KeyError:
+            return redirect(url_for('login_google'))
+    
+    
+        headers = {'Authorization': f'Bearer {access_token}'}
 
-    # Fetch the user's library again to ensure updates
-    bookshelves_url = 'https://www.googleapis.com/books/v1/mylibrary/bookshelves'
-    bookshelves_response = requests.get(bookshelves_url, headers=headers).json()
-    bookshelves = bookshelves_response.get('items', [])
+        # Fetch the user's library again to ensure updates
+        bookshelves_url = 'https://www.googleapis.com/books/v1/mylibrary/bookshelves'
+        bookshelves_response = requests.get(bookshelves_url, headers=headers).json()
+        bookshelves = bookshelves_response.get('items', [])
 
-    # For each shelf, fetch its contents
-    library = []
-    if current_user.is_authenticated:
-        for shelf in bookshelves:
-            shelf_id = shelf['id']
-            volumes_url = f'https://www.googleapis.com/books/v1/mylibrary/bookshelves/{shelf_id}/volumes'
-            volumes_response = requests.get(volumes_url, headers=headers).json()
-            shelf_contents = volumes_response.get('items', [])
-            library.extend(shelf_contents)
-
-    return render_template('pages/library.html', books=library, user_admin=session['user_admin'], profile_pic=session['profile_pic'], name=session['name'])
+        # For each shelf, fetch its contents
+        library = []
+        if current_user.is_authenticated:
+            for shelf in bookshelves:
+                shelf_id = shelf['id']
+                volumes_url = f'https://www.googleapis.com/books/v1/mylibrary/bookshelves/{shelf_id}/volumes'
+                volumes_response = requests.get(volumes_url, headers=headers).json()
+                shelf_contents = volumes_response.get('items', [])
+                library.extend(shelf_contents)
+        return render_template('pages/library.html', books=library, user_admin=session['user_admin'], profile_pic=session['profile_pic'], name=session['name'])
+    except requests.exceptions.ConnectionError:
+        return "It seems you like you are currently not connected to the internet. To access your library, you need an internet connection."
+        
 
 
 @app.route('/add_to_library', methods=['POST'])
