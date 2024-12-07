@@ -1,0 +1,41 @@
+{% extends 'layout.html' %}
+{% block headline %}
+    <h1 class="title">About BrightRead</h1>
+{% endblock headline %}
+
+{% block content %}
+<p>
+    Hi! It's Mads, the developer of this website. 
+    I felt like the home page was a little blank, 
+    so I added this page so you can get to know this project a little better.
+
+    <br><br>
+
+    <span style="font-weight: bold;">How it happened:</span>
+    I was bored. I had no projects to work on. 
+    With the help of ChatGPT, 
+    I was able to indentify and narrow down on what project I wanted to work on next.
+    It was between this project, or an AI project. 
+    My goal is to work on developing AI stuff in the future, 
+    but I find AI very complicated and hard to learn. So I went with the book project.
+    A few days later, the first few lines of code was written.
+
+    <br><br>
+
+    <span style="font-weight: bold;">Why it happened:</span>
+    My goal before I started on this project was to strengthen my coding skills 
+    while working on something I would be passionate about. 
+    To do so, it's important not to make it too hard or too easy. 
+    And that is what this project has been to me so far: just right. Not too hard, and not too easy.
+    By using Google's APIs and scopes, I was able to build something useful quite fast. 
+    And of course I used ChatGPT to help me make or fix certain things, 
+    but I try to make sure I understand what the code is doing before moving forward, 
+    so I won't have rely on ChatGPT for similar problems in the future.
+    I've already reached a point where there's not much left within my skill level after a few days, 
+    and I might stop working on this for a while going forward.
+    But it's been fun to make something I might actually find useful for once 
+    (because I read books, and it's always nice to have a good overview of the books I want to read in the future).
+
+</p>
+<img src="{{ url_for('static', filename='img/ME.jpg') }}" style="display: block; margin-left: auto; margin-right: auto; border-radius: 15px;">
+{% endblock content %}

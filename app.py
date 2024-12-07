@@ -57,7 +57,10 @@ def index():
 # Takes you to google's login thing.
 @app.route('/login/google')
 def login_google():
-    return oauth.myApp.authorize_redirect(redirect_uri=url_for('google_callback', _external=True))
+    try:
+        return oauth.myApp.authorize_redirect(redirect_uri=url_for('google_callback', _external=True))
+    except requests.exceptions.ConnectionError:
+        return "It seems you like you are currently not connected to the internet. To log in, you need an internet connection."
 
 
 # Where Google takes you after using their login thing.
@@ -114,8 +117,9 @@ def logout():
 
 @app.route('/admin')
 def admin():
-    # Admin dashboard logic here
-    return render_template('pages/admin.html', user_admin=session['user_admin'], profile_pic=session['profile_pic'], name=session['name'])
+    user_count = db.session.query(User).count()
+
+    return render_template('pages/admin.html', user_count=user_count, user_admin=session['user_admin'], profile_pic=session['profile_pic'], name=session['name'])
 
 
 @app.route('/library')
@@ -210,6 +214,10 @@ def search():
         flash("Please enter a search query.", "warning")
         return redirect(url_for('index'))
 
+
+@app.route('/about')
+def about():
+    return render_template('pages/about.html', user_admin=session.get('user_admin', False), profile_pic=session.get('profile_pic'), name=session.get('name'))
 
 if __name__ == '__main__':
     with app.app_context():
