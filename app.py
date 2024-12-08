@@ -116,6 +116,7 @@ def logout():
 
 
 @app.route('/admin')
+@login_required
 def admin():
     user_count = db.session.query(User).count()
 

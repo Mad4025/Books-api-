@@ -7,19 +7,24 @@
     {% if current_user.is_authenticated %}
     <br><ul class="no_style_type">
         <h2>Welcome, {{ name }}!</h2>
-        {% for book in books %}
-            <li>
-                {% if book.volumeInfo.imageLinks and book.volumeInfo.imageLinks.thumbnail %}
-                    <div class="content-section">
-                        <img src="{{ book.volumeInfo.imageLinks.thumbnail }}">
-                        <h2>{{ book.volumeInfo.title }}</h2>
-                        <p>{{ book.volumeInfo.authors | join(', ') }}</p>
-                        <p>{{ book.volumeInfo.description }}</p>
-                        <button class="remove-book" onclick="removeFromLibrary('{{ book.id }}')">Remove from library</button>
-                    </div>
-                {% endif %}
-            </li>
-        {% endfor %}
+        {% if books %}
+            {% for book in books %}
+                <li>
+                    {% if book.volumeInfo.imageLinks and book.volumeInfo.imageLinks.thumbnail %}
+                        <div class="content-section">
+                            <img src="{{ book.volumeInfo.imageLinks.thumbnail }}">
+                            <h2>{{ book.volumeInfo.title }}</h2>
+                            <p>{{ book.volumeInfo.authors | join(', ') }}</p>
+                            <p>{{ book.volumeInfo.description }}</p>
+                            <button class="remove-book" onclick="removeFromLibrary('{{ book.id }}')">Remove from library</button>
+                        </div>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        {% else %}
+                <p>It looks like you haven't added any books to your library yet...</p>
+        {% endif %}
+
     </ul>
     {% else %}
         <h2>Welcome, Guest!</h2>
