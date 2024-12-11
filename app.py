@@ -36,11 +36,11 @@ def set_global_user():
 # Set up Google's OAuth2
 oauth = OAuth(app)
 google = oauth.register("myApp",
-    # Client_id and client_secret is individual and only found on console.cloud.google.com in your project in credentials
+    # Client_id and client_secret is individual and only found on console.cloud.google.com in your project under credentials
     client_id=os.getenv('CLIENT_ID'),
-    client_secret=os.getenv('CLIENT_SECRET'),  # This is crucial for OIDC
+    client_secret=os.getenv('CLIENT_SECRET'),
     # Make sure you have enabled these scopes in OAuth consent screen.
-    client_kwargs={'scope': 'openid profile email https://www.googleapis.com/auth/books'},  # Use OIDC scope
+    client_kwargs={'scope': 'openid profile email https://www.googleapis.com/auth/books'},  # Use all of the scopes you added in console.cloud.google.com
     # Connect to server.
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',  # Important for OIDC
 )
@@ -58,7 +58,7 @@ def index():
 @app.route('/login/google')
 def login_google():
     try:
-        return oauth.myApp.authorize_redirect(redirect_uri=url_for('google_callback', _external=True))
+        return oauth.myApp.authorize_redirect(redirect_uri="https://brightread.it4.iktim.no/auth/google/callback")
     except requests.exceptions.ConnectionError:
         return "It seems you like you are currently not connected to the internet. To log in, you need an internet connection."
 
@@ -220,7 +220,8 @@ def search():
 def about():
     return render_template('pages/about.html', user_admin=session.get('user_admin', False), profile_pic=session.get('profile_pic'), name=session.get('name'))
 
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(host="localhost", port=5000, debug=True)
+    app.run(host="10.4.0.81", port=5001)
