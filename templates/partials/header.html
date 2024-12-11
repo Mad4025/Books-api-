@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
     <div class="container">
         <a class="navbar-brand mr-4" href="/">BrightRead</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarToggle">
@@ -11,21 +11,25 @@
                 {% if user_admin %}
                     <a class="nav-item nav-link" href="/admin">Admin</a>
                 {% endif %}
-                <form method="get" action="/search">
-                    <input type="text" name="query" placeholder="Enter book title or author" style="border-radius:6px;">
-                    <button type="submit" style="border-radius:6px;">Search</button>
-                </form>
             </div>
+            <form method="get" action="/search" class="form-inline my-2 my-lg-0">
+                <div class="input-group">
+                    <input class="form-control" type="text" name="query" placeholder="Enter book title or author" aria-label="Search">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-light" type="submit">Search</button>
+                    </div>
+                </div>
+            </form>
         </div>
         <div class="btn">
             {% if current_user.is_authenticated %}
                 {% if profile_pic %}
                     <img src="{{ profile_pic }}" style="width:38px; height:38px; border-radius:50%;">
                 {% endif %}
-                <span style="color:#cbd5db;">{{ name }}</span>
-                <a href="{{ url_for('logout') }}" class="btn" style="color:#cbd5db;">Log out</a>
+                <span style="color:#F1FAEE;">{{ name }}</span>
+                <a href="{{ url_for('logout') }}" class="btn" style="color:#F1FAEE;">Log out</a>
             {% else %}
-                <a href="{{ url_for('login_google') }}" class="btn" style="color:#cbd5db;">Log in</a>
+                <a href="{{ url_for('login_google') }}" class="btn" style="color:#F1FAEE;">Log in</a>
             {% endif %}
         </div>
     </div>
