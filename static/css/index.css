@@ -1,11 +1,14 @@
 body {
-    background: #F1FAEE;
-    color: #1D3557;
+    color: #F1FAEE;
     margin-top: 5rem;
+    background-image: url("/static/img/texture_image_body.png");
+    background-size: cover; /* Makes the image fit properly */
+    background-blend-mode: overlay; /* Blends the color and the image */
+    background-color: rgba(69, 123, 157, 0.9); /* Adds the color overlay */
     }
     
     h1, h2, h3, h4, h5, h6 {
-    color: #1D3557;
+    color: #F1FAEE;
     }
 
     h1 {
@@ -17,8 +20,18 @@ body {
     }
     
     .bg-steel {
-    background-color: #E63946;
-    }
+        position: fixed; /* Ensures the navbar stays at the top */
+        top: 0;          /* Attaches it to the very top of the page */
+        width: 100%;     /* Stretches it across the screen */
+        z-index: 10;     /* Keeps the navbar on top of other content */
+        background-image: url("/static/img/texture_image_navbar.png");
+        background-size: cover; /* Makes the image fit properly */
+        background-blend-mode: overlay; /* Blends the color and the image */
+        background-color: rgba(29, 53, 87, 0.9); /* Adds the color overlay */
+        color: white;    /* Ensures text is readable */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Adds a shadow for better visibility */
+        padding: 10px 20px; /* Adjusts navbar padding */
+    }      
     
     .site-header .navbar-nav .nav-link {
     color: #F1FAEE;
@@ -38,6 +51,7 @@ body {
     border: 1px solid #dddddd;
     border-radius: 3px;
     margin-bottom: 20px;
+    color: #1D3557
     }
     
     .article-title {
@@ -85,4 +99,12 @@ body {
     
     .account-heading {
     font-size: 2.5rem;
+    }
+
+    .about-button {
+        color:#F1FAEE; 
+        background-color: #1D3557; 
+        display: block; 
+        margin-left: auto; 
+        margin-right: auto;
     }

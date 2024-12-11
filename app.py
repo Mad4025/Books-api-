@@ -58,7 +58,7 @@ def index():
 @app.route('/login/google')
 def login_google():
     try:
-        return oauth.myApp.authorize_redirect(redirect_uri="https://brightread.it4.iktim.no/auth/google/callback")
+        return oauth.myApp.authorize_redirect(redirect_uri=url_for('google_callback'), _external=True)
     except requests.exceptions.ConnectionError:
         return "It seems you like you are currently not connected to the internet. To log in, you need an internet connection."
 
@@ -224,4 +224,4 @@ def about():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(host="10.4.0.81", port=5001)
+    app.run(host="localhost", port=5001)
