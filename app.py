@@ -51,14 +51,25 @@ def index():
     user_admin = session.get('user_admin', False)
     profile_pic = session.get('profile_pic')
     name = session.get('name')
-    return render_template('index.html', user_admin=user_admin, profile_pic=profile_pic, name=name)
+
+    try:
+        query = 'a'
+        url = 'https://www.googleapis.com/books/v1/volumes'
+        params = {'q': query, 'maxResults': 10}
+        response = requests.get(url, params=params)
+        books = response.json().get('items', [])
+    except Exception as e:
+        print(f"Error fetching books: {e}")
+        books = []
+
+    return render_template('index.html', books=books, user_admin=user_admin, profile_pic=profile_pic, name=name)
 
 
 # Takes you to google's login thing.
 @app.route('/login/google')
 def login_google():
     try:
-        return oauth.myApp.authorize_redirect(redirect_uri=url_for('google_callback'), _external=True)
+        return oauth.myApp.authorize_redirect(redirect_uri="https://brightread.it4.iktim.no/auth/google/callback")
     except requests.exceptions.ConnectionError:
         return "It seems you like you are currently not connected to the internet. To log in, you need an internet connection."
 
@@ -224,4 +235,4 @@ def about():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(host="localhost", port=5001)
+    app.run(host="10.4.0.81", port=5001)

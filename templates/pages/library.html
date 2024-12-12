@@ -11,7 +11,7 @@
             {% for book in books %}
                 <li>
                     {% if book.volumeInfo.imageLinks and book.volumeInfo.imageLinks.thumbnail %}
-                        <div class="content-section">
+                        <div class="content-section library-section-headers">
                             <img src="{{ book.volumeInfo.imageLinks.thumbnail }}">
                             <h2>{{ book.volumeInfo.title }}</h2>
                             <p>{{ book.volumeInfo.authors | join(', ') }}</p>

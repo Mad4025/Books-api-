@@ -5,8 +5,61 @@
 
 {% block content %}
 <br><br>
-<p style="text-align: center;">In the future there will (hopefully) be a recommendation algorithm here. But for now it's empty.</p>
+<ul class="no_style_type">
+    {% if books %}
+        <h2>Recommended Books</h2>
+        <div class="book-container">
+            {% for book in books %}
+                <li>
+                    {% if book.volumeInfo.imageLinks and book.volumeInfo.imageLinks.thumbnail %}
+                        <div class="book-card">
+                            <img src="{{ book.volumeInfo.imageLinks.thumbnail }}" alt="Book cover">
+                            <h3 class="book-title">{{ book.volumeInfo.title }}</h3>
+                            <p class="book-author">{{ book.volumeInfo.authors | join(', ') }}</p>
+                            {% if current_user.is_authenticated %}
+                                <button onclick="addToLibrary('{{ book.id }}')" class="add-button">Add to Library</button>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No books to display.</p>
+    {% endif %}
+</ul>
 
 <br><br>
-<a href="/about" class="btn btn-primary about-button";>About this project</a>
+<a href="/about" class="btn btn-primary about-button";>About this project</a><br><br>
+
+<script>
+    function addToLibrary(bookId) {
+        fetch('/add_to_library', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ book_id: bookId }),
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to add book to library');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Book added:', data);
+            if (data.requires_login) {
+                window.location.href = "{{ url_for('login_google') }}";
+            } else {
+                alert('Book added successfully!');
+            }
+        })
+        .catch(error => {
+            console.error('Error adding book:', error);
+            alert('Failed to add book to library');
+        });
+    }        
+</script>
+
 {% endblock content %}

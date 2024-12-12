@@ -1,14 +1,11 @@
 body {
-    color: #F1FAEE;
+    background: #fafafa;
+    color: #333333;
     margin-top: 5rem;
-    background-image: url("/static/img/texture_image_body.png");
-    background-size: cover; /* Makes the image fit properly */
-    background-blend-mode: overlay; /* Blends the color and the image */
-    background-color: rgba(69, 123, 157, 0.9); /* Adds the color overlay */
     }
     
     h1, h2, h3, h4, h5, h6 {
-    color: #F1FAEE;
+    color: #444444;
     }
 
     h1 {
@@ -51,9 +48,9 @@ body {
     border: 1px solid #dddddd;
     border-radius: 3px;
     margin-bottom: 20px;
-    color: #1D3557
+    color: #444444;
     }
-    
+
     .article-title {
     color: #1D3557;
     }
@@ -103,8 +100,90 @@ body {
 
     .about-button {
         color:#F1FAEE; 
-        background-color: #1D3557; 
+        background-color: #444444; 
+        border: 1px solid #444444;
         display: block; 
         margin-left: auto; 
         margin-right: auto;
     }
+
+    .about-button:hover {
+        color:#F1FAEE; 
+        background-color: #5e5e5e; 
+        border: 1px solid #5e5e5e;
+    }
+
+    .book-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Adjust the column width */
+        gap: 100px; /* Space between the cards */
+    }    
+    
+    .book-card {
+        width: 150px; /* Set the width of each card */
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        text-align: center;
+        padding: 10px;
+        background-color: #f9f9f9;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .book-card img {
+        width: 100%;
+        height: 150px;
+        border-radius: 4px;
+        object-fit: cover;
+    }
+    
+    .book-title {
+        font-size: 1rem;
+        margin: 10px 0 5px;
+        font-weight: bold;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .book-author {
+        font-size: 0.9rem;
+        color: #555;
+        margin-bottom: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .book-description {
+        font-size: 0.8rem;
+        color: #666;
+        max-height: 40px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .add-button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        font-size: 0.8rem;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 5px;
+    }
+    
+    .add-button:hover {
+        background-color: #0056b3;
+    }
+    
+    .no_style_type {
+        list-style: none;
+        padding: 0;
+    }
+    
+    
