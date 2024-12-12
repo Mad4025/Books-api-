@@ -120,7 +120,7 @@ body {
     }    
     
     .book-card {
-        width: 150px; /* Set the width of each card */
+        width: 250px; /* Set the width of each card */
         border: 1px solid #ddd;
         border-radius: 8px;
         overflow: hidden;
@@ -135,7 +135,7 @@ body {
     
     .book-card img {
         width: 100%;
-        height: 150px;
+        height: 300px;
         border-radius: 4px;
         object-fit: cover;
     }
@@ -166,7 +166,7 @@ body {
         text-overflow: ellipsis;
     }
     
-    .add-button {
+    .add-button, .remove-book {
         background-color: #007bff;
         color: white;
         border: none;
@@ -177,7 +177,7 @@ body {
         margin-top: 5px;
     }
     
-    .add-button:hover {
+    .add-button:hover, .remove-book:hover {
         background-color: #0056b3;
     }
     

@@ -5,6 +5,7 @@ from authlib.integrations.flask_client import OAuth
 import os
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
+import random
 
 load_dotenv()
 
@@ -45,19 +46,23 @@ google = oauth.register("myApp",
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',  # Important for OIDC
 )
 
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
     user_admin = session.get('user_admin', False)
     profile_pic = session.get('profile_pic')
     name = session.get('name')
 
+    books = []
     try:
-        query = 'a'
+        recommended_books_query = 'abcdefghijklmnopqrstuvwxyz'
+        recommended_books_query_char = random.choice(recommended_books_query)
+        query = recommended_books_query_char
         url = 'https://www.googleapis.com/books/v1/volumes'
-        params = {'q': query, 'maxResults': 10}
+        
+        params = {'q': query, 'maxResults': 20}
         response = requests.get(url, params=params)
         books = response.json().get('items', [])
+
     except Exception as e:
         print(f"Error fetching books: {e}")
         books = []
