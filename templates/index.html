@@ -17,7 +17,11 @@
                             <h3 class="book-title">{{ book.volumeInfo.title }}</h3>
                             <p class="book-author">{{ book.volumeInfo.authors | join(', ') }}</p>
                             {% if current_user.is_authenticated %}
-                                <button onclick="addToLibrary('{{ book.id }}')" class="add-button">Add to Library</button>
+                                {% if book.in_library %}
+                                    <button disabled class="add-button">In Library</button>
+                                {% else %}
+                                    <button onclick="addToLibrary('{{ book.id }}')" class="add-button">Add to Library</button>
+                                {% endif %}
                             {% endif %}
                         </div>
                     {% endif %}
@@ -25,7 +29,29 @@
             {% endfor %}
         </div>
     {% else %}
-        <p>No books to display.</p>
+        {% if not current_user.is_authenticated %}
+            <h2>Explore Books by Genre</h2>
+            <div class="book-container">
+                {% for genre in genres %}
+                    <div class="book-card">
+                        <h3 class="book-title">{{ genre.name }}</h3>
+                        <ul class="no_style_type">
+                            {% for book in genre.books %}
+                                <li>
+                                    {% if book.volumeInfo.imageLinks and book.volumeInfo.imageLinks.thumbnail %}
+                                        <img src="{{ book.volumeInfo.imageLinks.thumbnail }}" alt="Book cover">
+                                    {% endif %}
+                                    <p class="book-title">{{ book.volumeInfo.title }}</p>
+                                    <p class="book-author">{{ book.volumeInfo.authors | join(', ') }}</p>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No books to display.</p>
+        {% endif %}
     {% endif %}
 </ul>
 

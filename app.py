@@ -6,6 +6,8 @@ import os
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 import random
+import logging
+from collections import Counter
 
 load_dotenv()
 
@@ -19,6 +21,10 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -48,27 +54,163 @@ google = oauth.register("myApp",
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    amount_of_books = 12
     user_admin = session.get('user_admin', False)
     profile_pic = session.get('profile_pic')
     name = session.get('name')
 
     books = []
-    try:
-        recommended_books_query = 'abcdefghijklmnopqrstuvwxyz'
-        recommended_books_query_char = random.choice(recommended_books_query)
-        query = recommended_books_query_char
-        url = 'https://www.googleapis.com/books/v1/volumes'
-        
-        params = {'q': query, 'maxResults': 20}
-        response = requests.get(url, params=params)
-        books = response.json().get('items', [])
+    user_library_books = set()
+    top_categories = []
 
-    except Exception as e:
-        print(f"Error fetching books: {e}")
-        books = []
+    # Step 1: Retrieve User's Library and Extract Top Categories
+    if current_user.is_authenticated and 'user' in session:
+        try:
+            access_token = session['user']['access_token']
+            headers = {'Authorization': f'Bearer {access_token}'}
+            bookshelves_url = 'https://www.googleapis.com/books/v1/mylibrary/bookshelves'
+            library_response = requests.get(bookshelves_url, headers=headers)
+
+            if library_response.ok:
+                bookshelves = library_response.json().get('items', [])
+                logger.info(f"Bookshelves retrieved: {len(bookshelves)}")
+
+                categories = []
+
+                # Iterate through each bookshelf to collect categories
+                for shelf in bookshelves:
+                    shelf_id = shelf.get('id')
+                    volumes_url = f'https://www.googleapis.com/books/v1/mylibrary/bookshelves/{shelf_id}/volumes'
+                    volumes_response = requests.get(volumes_url, headers=headers)
+
+                    if volumes_response.ok:
+                        library_books = volumes_response.json().get('items', [])
+                        logger.info(f"Books retrieved from shelf {shelf_id}: {len(library_books)}")
+
+                        for book in library_books:
+                            book_id = book.get('id')
+                            if book_id:
+                                user_library_books.add(book_id)
+
+                            # Collect categories from each book
+                            volume_info = book.get('volumeInfo', {})
+                            book_categories = volume_info.get('categories', [])
+                            if isinstance(book_categories, list):
+                                categories.extend(book_categories)
+                            elif isinstance(book_categories, str):
+                                categories.append(book_categories)
+                    else:
+                        logger.warning(f"Failed to retrieve bookshelves for shelf ID {shelf_id}: {volumes_response.status_code}")
+
+                # Determine the top 3 categories
+                category_counts = Counter(categories)
+                sanitized_categories = [cat.replace('&', 'and') for cat in category_counts.keys()]
+
+                split_categories = []
+                for cat in sanitized_categories:
+                    if 'and' in cat:
+                        split_categories.extend([part.strip() for part in cat.split('and')])
+                    else:
+                        split_categories.append(cat)
+
+                # Standardize category terms by replacing spaces with hyphens and capitalizing
+                standardized_categories = [cat.replace(' ', '-').title() for cat in split_categories[:3]]
+                logger.info(f"Standardized Categories for Recommendation: {standardized_categories}")
+
+                top_categories = standardized_categories
+            elif library_response.status_code == 401:
+                flash('Session expired. Please log in again.')
+                return redirect(url_for('login_google'))
+            else:
+                logger.error(f"Error fetching bookshelves: {library_response.status_code}")
+        except Exception as e:
+            logger.error(f"Exception while fetching user library: {e}")
+
+        # Step 2: Fetch Recommended Books Based on Top Categories
+        if top_categories:
+            logger.info(f"Top Categories: {top_categories}")
+            api_key = os.getenv('GOOGLE_BOOKS_API_KEY')  # Ensure this is set in your .env
+
+            if not api_key:
+                logger.error("GOOGLE_BOOKS_API_KEY not found in environment variables.")
+                flash("Internal error: API key not configured.")
+                return render_template('index.html', books=books, user_admin=user_admin, profile_pic=profile_pic, name=name)
+
+            # Initialize a set to keep track of unique book IDs to avoid duplicates
+            unique_book_ids = set()
+
+            # Iterate through each top category and fetch books
+            for category in top_categories:
+                query = f"subject:{category}"
+                params = {
+                    'q': query,
+                    'maxResults': amount_of_books,  # Fetch up to 12 books per category
+                    'key': api_key
+                }
+                response = requests.get('https://www.googleapis.com/books/v1/volumes', params=params)
+
+                logger.info(f"Request URL: {response.url}")
+
+                if response.ok:
+                    response_data = response.json()
+                    total_items = response_data.get('totalItems', 0)
+                    logger.info(f"API Response for {query}: Total Items - {total_items}")
+
+                    if total_items > 0:
+                        items = response_data.get('items', [])
+                        for book in items:
+                            book_id = book.get('id')
+                            if book_id and book_id not in unique_book_ids:
+                                book['in_library'] = book_id in user_library_books
+                                books.append(book)
+                                unique_book_ids.add(book_id)
+
+                                # Stop if we've collected 20 books
+                                if len(books) >= amount_of_books:
+                                    break
+                    else:
+                        logger.warning(f"No books found for category: {category}")
+                else:
+                    logger.error(f"Failed to fetch books for category {category}: {response.status_code}")
+                    logger.error(f"Response Content: {response.text}")
+
+                if len(books) >= amount_of_books:
+                    break
+
+        # Step 3: Fallback Mechanism if No Books Found from Categories
+        if not books:
+            fallback_query = 'technology'
+            params = {
+                'q': fallback_query,
+                'maxResults': amount_of_books,
+                'key': os.getenv('GOOGLE_BOOKS_API_KEY')
+            }
+            fallback_response = requests.get('https://www.googleapis.com/books/v1/volumes', params=params)
+
+            logger.info(f"Fallback Request URL: {fallback_response.url}")
+
+            if fallback_response.ok:
+                fallback_data = fallback_response.json()
+                fallback_total = fallback_data.get('totalItems', 0)
+                logger.info(f"Fallback API Response: Total Items - {fallback_total}")
+
+                if fallback_total > 0:
+                    fallback_books = fallback_data.get('items', [])[:amount_of_books]
+                    for book in fallback_books:
+                        book_id = book.get('id')
+                        if book_id and book_id not in unique_book_ids:
+                            book['in_library'] = book_id in user_library_books
+                            books.append(book)
+                            unique_book_ids.add(book_id)
+
+                    logger.info(f"Fallback books retrieved: {len(fallback_books)}")
+                else:
+                    logger.warning("No books found in fallback query.")
+            else:
+                logger.error(f"Failed to fetch books for fallback query: {fallback_response.status_code}")
+                logger.error(f"Fallback Response Content: {fallback_response.text}")
 
     return render_template('index.html', books=books, user_admin=user_admin, profile_pic=profile_pic, name=name)
-
 
 # Takes you to google's login thing.
 @app.route('/login/google')
@@ -240,4 +382,4 @@ def about():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(host="10.4.0.81", port=5001)
+    app.run(host="10.4.0.81", port=5001, debug=True)

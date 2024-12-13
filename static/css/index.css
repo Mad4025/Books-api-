@@ -115,12 +115,12 @@ body {
 
     .book-container {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Adjust the column width */
-        gap: 100px; /* Space between the cards */
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Adjust the column width */
+        gap: 150px; /* Space between the cards */
     }    
     
     .book-card {
-        width: 250px; /* Set the width of each card */
+        width: 300px; /* Set the width of each card */
         border: 1px solid #ddd;
         border-radius: 8px;
         overflow: hidden;
@@ -184,6 +184,12 @@ body {
     .no_style_type {
         list-style: none;
         padding: 0;
+    }
+
+    .add-button:disabled {
+        background-color: #00ff22;
+        color: #333333;
+        cursor:default;
     }
     
     
