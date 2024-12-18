@@ -14,9 +14,14 @@
                         <h2>{{ book.volumeInfo.title }}</h2>
                         <p>{{ book.volumeInfo.authors | join(', ') }}</p>
                         <p>{{ book.volumeInfo.description }}</p>
-                        {% if current_user.is_authenticated %}
-                            <button onclick="addToLibrary('{{ book.id }}')" class="add-button">Add to Library</button>
-                        {% endif %}
+                            // Start of Selection
+                            {% if current_user.is_authenticated %}
+                                {% if book.in_library %}
+                                    <button disabled class="add-button" style="color: green;">In Library</button>
+                                {% else %}
+                                    <button onclick="addToLibrary('{{ book.id }}')" class="add-button">Add to Library</button>
+                                {% endif %}
+                            {% endif %}
                     </div>
                 {% endif %}
             </li>

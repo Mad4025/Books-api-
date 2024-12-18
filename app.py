@@ -1,13 +1,14 @@
-from flask import render_template, redirect, url_for, flash, request, session, g, Flask, jsonify
+from flask import render_template, redirect, url_for, flash, request, session, g, Flask, jsonify, abort
 from flask_login import login_user, login_required, logout_user, current_user, LoginManager, UserMixin
 import requests
 from authlib.integrations.flask_client import OAuth
 import os
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
-import random
 import logging
 from collections import Counter
+from functools import wraps
+import time
 
 load_dotenv()
 
@@ -20,7 +21,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login'
+login_manager.login_view = 'login_google'
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -31,6 +32,14 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
     role = db.Column(db.String(50), default='user')
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.role != 'admin':
+            abort(403) # Forbidden
+        return f(*args, **kwargs)
+    return decorated_function
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -144,36 +153,56 @@ def index():
                 query = f"subject:{category}"
                 params = {
                     'q': query,
-                    'maxResults': amount_of_books,  # Fetch up to 12 books per category
+                    'maxResults': amount_of_books,  # Fetch up to "amount_of_books" books per category
                     'key': api_key
                 }
                 response = requests.get('https://www.googleapis.com/books/v1/volumes', params=params)
-
+    
                 logger.info(f"Request URL: {response.url}")
-
+    
                 if response.ok:
                     response_data = response.json()
                     total_items = response_data.get('totalItems', 0)
                     logger.info(f"API Response for {query}: Total Items - {total_items}")
-
+    
                     if total_items > 0:
                         items = response_data.get('items', [])
                         for book in items:
                             book_id = book.get('id')
-                            if book_id and book_id not in unique_book_ids:
-                                book['in_library'] = book_id in user_library_books
-                                books.append(book)
-                                unique_book_ids.add(book_id)
-
-                                # Stop if we've collected 20 books
-                                if len(books) >= amount_of_books:
-                                    break
+                            access_info = book.get('accessInfo', {})
+    
+                            pdf_info = access_info.get('pdf', {})
+                            if pdf_info.get('isAvailable'):
+                                pdf_link = pdf_info.get('downloadLink') or access_info.get('webReaderLink')
+                            else:
+                                pdf_link = None
+    
+                                web_reader_link = access_info.get('webReaderLink')
+    
+                                # Enforce HTTPS for webReaderLink
+                                if web_reader_link and web_reader_link.startswith('http://'):
+                                    web_reader_link = web_reader_link.replace('http://', 'https://', 1)
+    
+                                # Enforce HTTPS for pdf_link if it exists
+                                if pdf_link and pdf_link.startswith('http://'):
+                                    pdf_link = pdf_link.replace('http://', 'https://', 1)
+    
+                                if book_id and book_id not in unique_book_ids:
+                                    book['in_library'] = book_id in user_library_books
+                                    book['pdf_link'] = pdf_link  # Add PDF link
+                                    book['web_reader_link'] = web_reader_link  # Add Web Reader link
+                                    books.append(book)
+                                    unique_book_ids.add(book_id)
+    
+                                    # Stop if we've collected 20 books
+                                    if len(books) >= amount_of_books:
+                                        break
                     else:
                         logger.warning(f"No books found for category: {category}")
                 else:
                     logger.error(f"Failed to fetch books for category {category}: {response.status_code}")
                     logger.error(f"Response Content: {response.text}")
-
+    
                 if len(books) >= amount_of_books:
                     break
 
@@ -275,6 +304,7 @@ def logout():
 
 @app.route('/admin')
 @login_required
+@admin_required
 def admin():
     user_count = db.session.query(User).count()
 
@@ -358,20 +388,60 @@ def remove_from_library():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
 @app.route('/search', methods=['GET'])
 def search():
     query = request.args.get('query', '')
     books = []
+    user_library_books = set()
+
+    # Step 1: Retrieve User's Library
+    if current_user.is_authenticated and 'user' in session:
+        try:
+            access_token = session['user']['access_token']
+            headers = {'Authorization': f'Bearer {access_token}'}
+            bookshelves_url = 'https://www.googleapis.com/books/v1/mylibrary/bookshelves'
+            library_response = requests.get(bookshelves_url, headers=headers)
+
+            if library_response.ok:
+                bookshelves = library_response.json().get('items', [])
+                for shelf in bookshelves:
+                    shelf_id = shelf.get('id')
+                    volumes_url = f'https://www.googleapis.com/books/v1/mylibrary/bookshelves/{shelf_id}/volumes'
+                    volumes_response = requests.get(volumes_url, headers=headers)
+                    if volumes_response.ok:
+                        library_books = volumes_response.json().get('items', [])
+                        for book in library_books:
+                            book_id = book.get('id')
+                            if book_id:
+                                user_library_books.add(book_id)
+            elif library_response.status_code == 401:
+                flash('Session expired. Please log in again.')
+                return redirect(url_for('login_google'))
+        except Exception as e:
+            logger.error(f"Exception while fetching user library: {e}")
+
+    # Step 2: Search for Books Based on Query
     if query:
-        url = 'https://www.googleapis.com/books/v1/volumes'
-        params = {'q': query}
-        response = requests.get(url, params=params)
-        books = response.json().get('items', [])
+        api_key = os.getenv('GOOGLE_BOOKS_API_KEY')
+        params = {'q': query, 'maxResults': 12, 'key': api_key}
+        response = requests.get('https://www.googleapis.com/books/v1/volumes', params=params)
+        
+        if response.ok:
+            response_data = response.json()
+            items = response_data.get('items', [])
+            for book in items:
+                book_id = book.get('id')
+                if book_id:
+                    book['in_library'] = book_id in user_library_books  # Check if the book is in the user's library
+                    books.append(book)
+        else:
+            logger.error(f"Failed to fetch books for search query: {response.status_code}")
+
         return render_template('pages/search_results.html', query=query, books=books, user_admin=session.get('user_admin', False), profile_pic=session.get('profile_pic'), name=session.get('name'))
     else:
         flash("Please enter a search query.", "warning")
         return redirect(url_for('index'))
+
 
 
 @app.route('/about')
@@ -382,4 +452,4 @@ def about():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(host="10.4.0.81", port=5001, debug=True)
+    app.run(host="10.4.0.81", port=5001)
