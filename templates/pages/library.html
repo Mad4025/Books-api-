@@ -1,4 +1,5 @@
 {% extends 'layout.html' %}
+
 {% block headline %}
     <h1 class="title">Library</h1>
 {% endblock headline %}
@@ -16,6 +17,21 @@
                             <h2>{{ book.volumeInfo.title }}</h2>
                             <p>{{ book.volumeInfo.authors | join(', ') }}</p>
                             <p>{{ book.volumeInfo.description }}</p>
+                            
+                            <!-- Start of Selection: Preview Feature -->
+                            {% if book.accessInfo %}
+                                {% if book.accessInfo.pdf.isAvailable or book.accessInfo.webReaderLink %}
+                                    <button class="view-pdf-btn" 
+                                            data-pdf="{{ book.accessInfo.pdf.downloadLink }}" 
+                                            data-web-reader="{{ book.accessInfo.webReaderLink }}">
+                                        Read Sample
+                                    </button>
+                                {% else %}
+                                    <span>No Preview Available</span>
+                                {% endif %}
+                            {% endif %}
+                            <!-- End of Preview Feature -->
+
                             <button class="remove-book" onclick="removeFromLibrary('{{ book.id }}')">Remove from library</button>
                         </div>
                     {% endif %}
@@ -32,6 +48,35 @@
     {% endif %}
 
     <script>
+        // Attach event listeners to all 'Read Sample' buttons
+        var buttons = document.getElementsByClassName("view-pdf-btn");
+        Array.from(buttons).forEach(function(button) {
+            button.addEventListener("click", function() {
+                var pdfUrl = button.getAttribute("data-pdf");
+                var webReaderUrl = button.getAttribute("data-web-reader");
+
+                console.log("PDF URL:", pdfUrl);
+                console.log("Web Reader URL:", webReaderUrl);
+
+                if (pdfUrl && pdfUrl !== 'None') {
+                    // Ensure the URL is HTTPS
+                    if (pdfUrl.startsWith('http://')) {
+                        pdfUrl = pdfUrl.replace('http://', 'https://');
+                    }
+                    window.open(pdfUrl, '_blank');
+                } else if (webReaderUrl) {
+                    // Ensure the URL is HTTPS
+                    if (webReaderUrl.startsWith('http://')) {
+                        webReaderUrl = webReaderUrl.replace('http://', 'https://');
+                    }
+                    window.open(webReaderUrl, '_blank');
+                } else {
+                    alert("Preview not available for this book.");
+                    return;
+                }
+            });
+        });
+
         function removeFromLibrary(bookId) {
             fetch('/remove_from_library', {
                 method: 'POST',
