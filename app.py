@@ -8,20 +8,22 @@ from flask_sqlalchemy import SQLAlchemy
 import logging
 from collections import Counter
 from functools import wraps
-import time
+from flask_migrate import Migrate
 
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
-db_path = os.getenv('SQLACHEMY_DATABASE_URI')
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{db_path}'
+db_path = os.getenv('SQLALCHEMY_DATABASE_URI')
+app.config['SQLALCHEMY_DATABASE_URI'] = db_path
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login_google'
+
+migrate = Migrate(app, db)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -452,4 +454,4 @@ def about():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(host="0.0.0.0", port=5001)
+    app.run(host="0.0.0.0", port=5000)

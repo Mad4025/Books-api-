@@ -5,3 +5,4 @@ authlib
 python-dotenv
 flask-sqlalchemy
 PyMySQL
+Flask-Migrate
